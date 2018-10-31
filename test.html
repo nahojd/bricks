@@ -1,0 +1,121 @@
+<html>
+
+<body>
+
+	<canvas id="thecanvas" width="1000" height="1000" style="background-color: black;"></canvas>
+
+	<p>Antal bollar: <span id="ballCount">0</span></p>
+
+	<p>Tryck <strong>B</strong> för fler bollar, eller <strong>R</strong> för att nollställa</p>
+
+	<script>
+		class Ball {
+			constructor(colour, x, y, vx, vy) {
+				this.colour = colour;
+				this.x = x;
+				this.y = y;
+				this.vx = vx;
+				this.vy = vy;
+			}
+
+			static create() {
+				//Create and return random ball
+				let colour = '#';
+				for(var i=0; i<3; i++) {
+					colour += Math.floor(Math.random() * 255).toString(16);
+				}
+
+				const velocity = 4 + Math.random() * 4;
+				const direction = Math.PI*1/4 + Math.random()*Math.PI*0.5;
+
+				return new Ball(colour, xMax/2, yMax/2, velocity * Math.cos(direction), velocity * Math.sin(direction));
+			}
+
+			step() {
+				const x = this.x + this.vx;
+				const y = this.y + this.vy;
+
+				let vx = this.vx;
+				let vy = this.vy;
+
+				if ((x <= 0 && vx <= 0) || (x >= xMax && vx >= 0))
+					vx = -this.vx;
+				if ((y <= 0 && vy <= 0) || (y >= yMax && vy >= 0))
+					vy = -this.vy;
+
+
+				return new Ball(this.colour, x, y, vx, vy);
+			}
+
+			draw(context) {
+				const radius = 5;
+
+				context.fillStyle = this.colour;
+				context.beginPath();
+				context.arc(this.x, this.y, radius, 0, 2 * Math.PI, false);
+				context.fill();
+			}
+		}
+
+		let balls = [];
+		let reset = false;
+		const canvas = document.getElementById('thecanvas');
+		const xMax = canvas.width;
+		const yMax = canvas.height;
+		const context = canvas.getContext('2d');
+		const ballCountLabel = document.getElementById('ballCount');
+
+		function init() {
+			addBall();
+
+			setInterval(next, 1000/120);
+
+			window.requestAnimationFrame(renderFrame);
+		}
+
+		function addBall() {
+			balls.push(Ball.create());
+			ballCountLabel.innerText = balls.length;
+		}
+
+
+		function next() {
+			const objects = [];
+
+			if (reset) {
+				reset = false;
+				objects.push(Ball.create());
+				balls = objects;
+				ballCountLabel.innerText = balls.length;
+				return;
+			}
+
+			balls.forEach(ball => objects.push(ball.step()));
+			balls = objects;
+		}
+
+		function renderFrame() {
+
+			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			balls.forEach(ball => ball.draw(context));
+
+			window.requestAnimationFrame(renderFrame)
+		}
+
+		document.querySelector('body').onkeypress = function(e) {
+			console.debug(e.charCode);
+			if (e.charCode === 98) { // b
+				addBall();
+			}
+			else if (e.charCode === 114) {//r
+				reset = true;
+			}
+		};
+
+		init();
+	</script>
+
+</body>
+
+</html>
